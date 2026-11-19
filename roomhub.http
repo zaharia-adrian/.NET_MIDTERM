@@ -1,0 +1,55 @@
+### Variables
+@baseUrl = http://localhost:5090
+
+### 1. Create room
+# @name createRoom
+POST {{baseUrl}}/api/rooms
+Content-Type: application/json
+
+{
+  "name": "Study room 1",
+  "capacity": 10
+}
+
+###
+@roomId = {{createRoom.response.body.$.id}}
+
+### 2. Get room
+GET {{baseUrl}}/api/rooms/{{roomId}}
+
+### 3. Get a missing room (expected: 404)
+GET {{baseUrl}}/api/rooms/00000000-0000-0000-0000-000000000001
+
+### 4. Create booking (change the dates to the future!)
+# @name createBooking
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "ana",
+  "startUtc": "2030-01-10T10:00:00Z",
+  "endUtc": "2030-01-10T12:00:00Z",
+  "attendees": 4
+}
+
+###
+@bookingId = {{createBooking.response.body.$.id}}
+
+### 5. Get booking
+GET {{baseUrl}}/api/bookings/{{bookingId}}
+
+### 6. Overlapping booking (expected: 409)
+POST {{baseUrl}}/api/rooms/{{roomId}}/bookings
+Content-Type: application/json
+
+{
+  "bookedBy": "bogdan",
+  "startUtc": "2030-01-10T11:00:00Z",
+  "endUtc": "2030-01-10T13:00:00Z",
+  "attendees": 4
+}
+
+### 7. Cancel booking
+POST {{baseUrl}}/api/bookings/{{bookingId}}/cancel
+
+### 8. Add your own requests here for the rules in ASSIGNMENT.md

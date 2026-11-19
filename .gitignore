@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+.idea/
+*.user
+*.db
+*.db-shm
+*.db-wal
+
+# Dumps (crash/memory dumps, database dumps)
+*.dmp
+*.dump
+*.mdmp
+*.hdmp
