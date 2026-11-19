@@ -7,12 +7,12 @@ An unanswered question gives 0 points.
 ## 1. A rule you moved
 Pick one business rule (R1–R8). In which file did it live in the starter and in which file does it live now? Why there?
 
-_(your answer here)_
+R1 se afla in Services/RoomService.cs deoarece intr-o arhitectura bazata pe controlere regulile domeniului sunt impuse the service-ul care ofera acea functionalitate. Acum regula se afla in Domain/Rooms/Room.cs ca parte din Vertiical Slice Architecture si DDD.
 
 ## 2. Result instead of an exception
 Why is `Result` a better choice than an exception for "the room is occupied"? What happens in your code when an `Error` is returned?
 
-_(your answer here)_
+Deoarece Resultul reprezinta o componenta fireasca a flowului aplicatiei atunci cand room e ocupata si nu este nevoie ca aplicatia sa fie intrerupta printr-o exceptie
 
 ## 3. Who knows about EF Core?
 Which classes in your project know about EF Core and which do not? What do you gain and what do you pay with Repository + Unit of Work?

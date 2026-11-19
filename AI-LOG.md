@@ -6,3 +6,4 @@ Write down, in order, what you asked the AI. It is not a punishment: a missing o
 |---|---|---|---|
 | 2 minute | Refactorizeaza introducand Vertical Slice Architecture, Rich Domain, Result,  | totul | - |
 | 1 minut  | check all the rules, and log which ones are bypassed and solve them | totul | - |
+| 2 minute | Adauga persistenta cu EF Core si SQLite | totul | - | 
