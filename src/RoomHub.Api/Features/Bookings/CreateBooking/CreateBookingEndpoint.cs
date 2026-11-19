@@ -15,8 +15,8 @@ public static class CreateBookingEndpoint
                 var command = new CreateBookingCommand(
                     roomId,
                     request.BookedBy,
-                    request.StartUtc.UtcDateTime,
-                    request.EndUtc.UtcDateTime,
+                    request.StartUtc.AsUtc(),
+                    request.EndUtc.AsUtc(),
                     request.Attendees);
 
                 var result = await handler.Handle(command, cancellationToken);

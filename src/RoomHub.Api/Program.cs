@@ -17,6 +17,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<BookingWriteGate>();
 
 // Persistence (in-memory for now; swap for EF Core + SQLite later).
 builder.Services.AddSingleton<IRoomRepository, InMemoryRoomRepository>();

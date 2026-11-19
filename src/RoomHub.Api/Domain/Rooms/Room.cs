@@ -29,5 +29,11 @@ public sealed class Room
         return new Room(Guid.NewGuid(), name.Trim(), capacity);
     }
 
+    public const int LargeRoomThreshold = 10;
+
     public bool CanHost(int attendees) => attendees <= Capacity;
+
+    // R6 + R10: large rooms (capacity > 10) have a 2-hour limit, the others 4 hours.
+    public TimeSpan MaxBookingDuration =>
+        Capacity > LargeRoomThreshold ? TimeSpan.FromHours(2) : TimeSpan.FromHours(4);
 }

@@ -11,7 +11,8 @@ public enum BookingStatus
 
 public sealed class Booking
 {
-    public static readonly TimeSpan MaxDuration = TimeSpan.FromHours(4);
+    public const int MaxActiveBookingsPerDay = 2;
+    public static readonly TimeSpan MinNoticeForCancel = TimeSpan.FromMinutes(60);
 
     private Booking() { } // for EF Core later
 
@@ -43,7 +44,8 @@ public sealed class Booking
         DateTime endUtc,
         int attendees,
         DateTime nowUtc,
-        IEnumerable<Booking> existingRoomBookings)
+        IEnumerable<Booking> existingRoomBookings,
+        IEnumerable<Booking> participantBookingsSameDay)
     {
         // R2
         if (string.IsNullOrWhiteSpace(bookedBy))
@@ -64,26 +66,39 @@ public sealed class Booking
         if (startUtc < nowUtc)
             return BookingErrors.StartsInThePast;
 
-        // R6: exactly 4 hours is allowed.
-        if (endUtc - startUtc > MaxDuration)
-            return BookingErrors.TooLong;
+        // R6 + R10: the limit depends on the room (4h, or 2h for capacity > 10); the limit itself is allowed.
+        var maxDuration = room.MaxBookingDuration;
+        if (endUtc - startUtc > maxDuration)
+            return BookingErrors.TooLong(maxDuration);
 
         // R7: only active bookings of this room count; touching intervals do not overlap.
         if (existingRoomBookings.Any(b => b.RoomId == room.Id && b.OverlapsWith(startUtc, endUtc)))
             return BookingErrors.RoomOccupied;
 
-        return new Booking(Guid.NewGuid(), room.Id, bookedBy.Trim(), startUtc, endUtc, attendees);
+        // R9: at most 2 active bookings per participant per UTC day (day = date of StartUtc), all rooms.
+        var participant = bookedBy.Trim();
+        var day = DateOnly.FromDateTime(startUtc);
+        var activeSameDay = participantBookingsSameDay.Count(b =>
+            b.IsActive && b.BookedBy == participant && DateOnly.FromDateTime(b.StartUtc) == day);
+        if (activeSameDay >= MaxActiveBookingsPerDay)
+            return BookingErrors.DailyLimitReached;
+
+        return new Booking(Guid.NewGuid(), room.Id, participant, startUtc, endUtc, attendees);
     }
 
     // Half-open intervals [Start, End): ending exactly when another starts is not an overlap.
     public bool OverlapsWith(DateTime startUtc, DateTime endUtc) =>
         IsActive && StartUtc < endUtc && startUtc < EndUtc;
 
-    // R8
-    public Result Cancel()
+    // R8 + R11
+    public Result Cancel(DateTime nowUtc)
     {
         if (Status == BookingStatus.Cancelled)
             return BookingErrors.AlreadyCancelled;
+
+        // R11: must start at least 60 minutes from now (exactly 60 is allowed).
+        if (StartUtc - nowUtc < MinNoticeForCancel)
+            return BookingErrors.TooLateToCancel;
 
         Status = BookingStatus.Cancelled;
         return Result.Success();

@@ -5,7 +5,7 @@ using RoomHub.Api.Domain.Rooms;
 
 namespace RoomHub.Api.Features.Bookings.CreateBooking;
 
-public sealed record CreateBookingRequest(string? BookedBy, DateTimeOffset StartUtc, DateTimeOffset EndUtc, int Attendees);
+public sealed record CreateBookingRequest(string? BookedBy, DateTime StartUtc, DateTime EndUtc, int Attendees);
 
 public sealed record CreateBookingCommand(Guid RoomId, string? BookedBy, DateTime StartUtc, DateTime EndUtc, int Attendees);
 
@@ -15,7 +15,8 @@ public sealed class CreateBookingHandler(
     IRoomRepository rooms,
     IBookingRepository bookings,
     IUnitOfWork unitOfWork,
-    TimeProvider timeProvider)
+    TimeProvider timeProvider,
+    BookingWriteGate writeGate)
     : ICommandHandler<CreateBookingCommand, CreateBookingResponse>
 {
     public async Task<Result<CreateBookingResponse>> Handle(CreateBookingCommand command, CancellationToken cancellationToken)
@@ -25,11 +26,20 @@ public sealed class CreateBookingHandler(
         if (room is null)
             return RoomErrors.NotFound;
 
+        // Load + check (R7, R9) + save must happen as one step, otherwise parallel requests can both pass.
+        using var _ = await writeGate.EnterAsync(cancellationToken);
+
         var existing = await bookings.GetActiveForRoomAsync(room.Id, cancellationToken);
         var now = timeProvider.GetUtcNow().UtcDateTime;
 
+        // R9 needs the participant's bookings on the same UTC day (the domain decides; the handler only loads data).
+        IReadOnlyList<Booking> sameDay = string.IsNullOrWhiteSpace(command.BookedBy)
+            ? []
+            : await bookings.GetActiveForParticipantOnDayAsync(
+                command.BookedBy.Trim(), DateOnly.FromDateTime(command.StartUtc), cancellationToken);
+
         var result = Booking.Create(
-            room, command.BookedBy, command.StartUtc, command.EndUtc, command.Attendees, now, existing);
+            room, command.BookedBy, command.StartUtc, command.EndUtc, command.Attendees, now, existing, sameDay);
         if (result.IsFailure)
             return result.Error;
 

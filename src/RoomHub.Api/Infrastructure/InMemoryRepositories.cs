@@ -46,6 +46,24 @@ public sealed class InMemoryBookingRepository : IBookingRepository
         }
     }
 
+    public Task<IReadOnlyList<Booking>> GetActiveForParticipantOnDayAsync(
+        string bookedBy, DateOnly dayUtc, CancellationToken cancellationToken = default)
+    {
+        var dayStart = dayUtc.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var dayEnd = dayStart.AddDays(1);
+
+        lock (_lock)
+        {
+            IReadOnlyList<Booking> result = _bookings
+                .Where(b => b.IsActive
+                            && b.BookedBy == bookedBy
+                            && b.StartUtc >= dayStart
+                            && b.StartUtc < dayEnd)
+                .ToList();
+            return Task.FromResult(result);
+        }
+    }
+
     public void Add(Booking booking)
     {
         lock (_lock)

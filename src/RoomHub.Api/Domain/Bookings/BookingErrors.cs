@@ -19,8 +19,14 @@ public static class BookingErrors
     public static readonly Error StartsInThePast =
         Error.Validation("Booking.StartsInThePast", "A booking cannot start in the past.");
 
-    public static readonly Error TooLong =
-        Error.Validation("Booking.TooLong", "A booking can last at most 4 hours.");
+    public static Error TooLong(TimeSpan max) =>
+        Error.Validation("Booking.TooLong", $"A booking in this room can last at most {max.TotalHours:0} hours.");
+
+    public static readonly Error DailyLimitReached =
+        Error.Conflict("Booking.DailyLimitReached", "A participant can have at most 2 active bookings per day.");
+
+    public static readonly Error TooLateToCancel =
+        Error.Conflict("Booking.TooLateToCancel", "A booking can be cancelled only at least 60 minutes before it starts.");
 
     public static readonly Error RoomOccupied =
         Error.Conflict("Booking.RoomOccupied", "The room is already booked in this interval.");

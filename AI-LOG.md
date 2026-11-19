@@ -4,4 +4,5 @@ Write down, in order, what you asked the AI. It is not a punishment: a missing o
 
 | Time (approx.) | What you asked (briefly) | What you kept | What you changed or rejected |
 |---|---|---|---|
-| _(fill in)_ | _(fill in)_ | _(fill in)_ | _(fill in)_ |
+| 2 minute | Refactorizeaza introducand Vertical Slice Architecture, Rich Domain, Result,  | totul | - |
+| 1 minut  | check all the rules, and log which ones are bypassed and solve them | totul | - |
